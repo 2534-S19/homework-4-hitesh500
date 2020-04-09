@@ -40,17 +40,18 @@ int main(void)
     {
         // TODO: Check the receive interrupt flag to see if a received character is available.
         //       Return 0xFF if no character is available.
-        if (UART_getInterruptStatus(EUSCI_A0_BASE,EUSCI_A_UART_TRANSMIT_FLAG)==0){
-            rChar=0xFF;
+        if (UART_getInterruptStatus(EUSCI_A0_BASE,EUSCI_A_UART_RECEIVE_INTERRUPT_FLAG)==EUSCI_A_UART_RECEIVE_INTERRUPT_FLAG){
+            rChar=UART_receiveData(EUSCI_A0_BASE);
         }
         else {
-            rChar=0x00;
+            rChar=0xFF;
         }
 
         // TODO: If an actual character was received, echo the character to the terminal AND use it to update the FSM.
         //       Check the transmit interrupt flag prior to transmitting the character.
-        if (rChar!=0xFF){
-
+        if (rChar!=0xFF && UART_getInterruptStatus(EUSCI_A0_BASE,EUSCI_A_UART_TRANSMIT_INTERRUPT_FLAG)==EUSCI_A_UART_TRANSMIT_INTERRUPT_FLAG){
+            UART_transmitData(EUSCI_A0_BASE,rChar);
+            charFSM(rChar);
         }
 
 
@@ -71,8 +72,69 @@ void initBoard()
 // TODO: FSM for detecting character sequence.
 bool charFSM(char rChar)
 {
+    typedef enum {SX,S2,S25,S253,S2534} state;
+    static state currentState = SX;
     bool finished = false;
-    switch
+    switch (currentState) {
+
+        case SX:
+
+            if (rChar == 2)
+
+                currentState = S2;
+
+            break;
+
+
+        case S2:
+
+            if (rChar == 5)
+
+                currentState = S25;
+
+            else
+
+                currentState = SX;
+
+            break;
+
+
+        case S25:
+
+            if (rChar == 3)
+
+                currentState = S253;
+
+            else
+
+                currentState = SX;
+
+            break;
+
+
+        case S253:
+
+            if (rChar == 4) {
+
+                currentState = S2534;
+
+                finished = true; }
+
+            else
+
+                currentState = SX;
+
+            break;
+
+
+        case S2534:
+
+            currentState = SX;
+
+            break;
+
+    }
+
 
     return finished;
 }
