@@ -58,7 +58,13 @@ int main(void)
         // TODO: If the FSM indicates a successful string entry, transmit the response string.
         //       Check the transmit interrupt flag prior to transmitting each character and moving on to the next one.
         //       Make sure to reset the success variable after transmission.
-
+        if (charFSM(rChar)==true){
+            int n = 0;
+            while (response[n]!='\0'){
+                UART_transmitData(EUSCI_A0_BASE, response[n]);
+                n++;
+            }
+        }
 
     }
 }
